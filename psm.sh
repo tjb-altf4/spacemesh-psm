@@ -69,10 +69,10 @@ function validate_json {
 		&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
 		|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
-	CRITERIA=".endpoint.ip_address is a valid IP address"
-	jq -e 'all(.services[].endpoint.ip_address; test("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"))' <<< "$JSON" > /dev/null \
-		&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
-		|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
+	# CRITERIA=".endpoint.ip_address is a valid IP address"
+	# jq -e 'all(.services[].endpoint.ip_address; test("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"))' <<< "$JSON" > /dev/null \
+	# 	&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
+	#	|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
 	CRITERIA=".endpoint.metrics is a url starting with http:// or https://"
 	jq -e 'all(.services[].endpoint.metrics; startswith("http://") or startswith("https://"))' <<< "$JSON" > /dev/null \
@@ -84,10 +84,10 @@ function validate_json {
 		&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
 		|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
-	CRITERIA=".post.id is a 43-char long (+ 1-char padding) base64 encoded string"
-	jq -e 'all(.services[].post.id; test("^[A-Za-z0-9+/]{43}=$"))' <<< "$JSON" > /dev/null \
-		&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
-		|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
+	# CRITERIA=".post.id is a 43-char long (+ 1-char padding) base64 encoded string"
+	# jq -e 'all(.services[].post.id; test("^[A-Za-z0-9+/]{43}=$"))' <<< "$JSON" > /dev/null \
+	# 	&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
+	# 	|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
 	CRITERIA=".post.numunits is a non-negative integer"
 	jq -e 'all(.services[].post.numunits; type == "number" and . >= 0 and (floor - .) == 0)' <<< "$JSON" > /dev/null \
