@@ -19,4 +19,4 @@ While spacemesh-psm has been throughtly tested, it may contain undiscovered bugs
 If you like spacemesh-psm and would like to say thanks, you can donate to this Spacemesh address: `sm1qqqqqqxjq5nkqmvnqnkl0t9hz8shwkuhqdervnchju963`
 
 ### Help
-Please note that this repository is maintained by a fellow community member. I can only provide support for software bugs and issues directly related to the code in this repository. For general questions, usage inquiries, or issues not related to software bugs, we recommend checking out the official Spacemesh Discord (see https://spacemesh.io/) and seeking help from the community.
+Please note that this repository is maintained by a fellow community member. I can only provide support for software bugs and issues directly related to the code in this repository. For general questions, usage inquiries, or issues not related to software bugs, I recommend checking out the official Spacemesh Discord (see https://spacemesh.io/) and seeking help from the community.

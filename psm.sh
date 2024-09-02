@@ -11,7 +11,7 @@ LOG_LEVELS='{
 }'
 
 function load_configuration {
-	GRPCURL=grpcurl     # "docker run --rm --net=br5 fullstorydev/grpcurl:latest"
+	GRPCURL=grpcurl
 	DELAY=60
 
 	CURRENT_STATE=$(jq -c '.' /psm/config.json)
@@ -174,17 +174,11 @@ function get_online_state {
 function set_online_state {
 	PIDS=()		# reset array
 
-    # --------------------------------------
-    # check public nodes
-    # FUTURE
-
-    # --------------------------------------
     # check primary node
     local NODE_NAME=$(echo "${CURRENT_STATE}" | jq -r '.node.name')
     local NODE_IP=$(echo "${CURRENT_STATE}" | jq -r '.node.endpoint.ip_address')
     get_online_state $NODE_NAME $NODE_IP "NODE"
 
-    # --------------------------------------
     # check services
     while IFS= read -r SERVICE; do
         local SERVICE_NAME=$(echo "$SERVICE" | jq -r '.name')
@@ -192,7 +186,7 @@ function set_online_state {
         get_online_state $SERVICE_NAME $SERVICE_IP "SERVICE"
     done < <(echo "${CURRENT_STATE}" | jq -c '.services[]')
 
-    # Wait for all pings to complete and update the CURRENT_STATE_REF
+    # wait for all pings to complete and update the CURRENT_STATE
     for pid_info in "${PIDS[@]}"; do
         local PID=$(echo "$pid_info" | cut -d: -f1)
         local NAME=$(echo "$pid_info" | cut -d: -f2)
@@ -303,14 +297,14 @@ function set_proving_state {
 	local SERVICE_METRICS=$(echo "$SERVICE" | jq -r '.endpoint.metrics')
 	local SERVICE_NUMUNITS=$(echo "$SERVICE" | jq -r '.post.numunits')
 	
-	local PROVING_PHASE="OFFLINE"		# OFFLINE, READY, PROVING_POW, PROVING_DISK, WAITING, DONE
+	local PROVING_PHASE="OFFLINE"	# OFFLINE, READY, PROVING_POW, PROVING_DISK, WAITING, DONE
 	local PROVING_NONCE=""
 	local PROVING_PROGRESS=0
 	local NONCE_SEARCH_START=0
 	local NONCE_SEARCH_END=0
 	local NONCE_SEARCH_POSITION=0
 	local NOW=$(date +%s)
-	local NUMUNITS_BYTES=$(($SERVICE_NUMUNITS * 64 * 1024 * 1024 * 1024))			# 1 NUMUNITS(SU) = 64GiB
+	local NUMUNITS_BYTES=$(($SERVICE_NUMUNITS * 64 * 1024 * 1024 * 1024))	# 1 NUMUNITS(SU) = 64GiB
 
 	if $SERVICE_ONLINE
 	then
@@ -351,9 +345,6 @@ function set_proving_state {
 		esac
 	fi
 
-
-
-
 	local TIMESTAMP_START_POW=$(echo "$SERVICE" | jq -r '.runtime.timestamp_start_pow')
 	local TIMESTAMP_START_DISK=$(echo "$SERVICE" | jq -r '.runtime.timestamp_start_disk')
 	local TIMESTAMP_FINISH=$(echo "$SERVICE" | jq -r '.runtime.timestamp_finish')
@@ -368,8 +359,7 @@ function set_proving_state {
 			TIMESTAMP_START_DISK=0
 			TIMESTAMP_FINISH=0
 
-			#if [[ $RUNTIME_POW -eq 0 ]]; then 
-			RUNTIME_POW=$((($NOW - $TIMESTAMP_START_POW) / 60))		#; fi
+			RUNTIME_POW=$((($NOW - $TIMESTAMP_START_POW) / 60))	
 			RUNTIME_DISK=0
 			RUNTIME_OVERALL=$RUNTIME_POW
 
@@ -380,22 +370,10 @@ function set_proving_state {
 			if [[ $TIMESTAMP_START_DISK -eq 0 ]]; then TIMESTAMP_START_DISK=$NOW; fi
 			TIMESTAMP_FINISH=0
 
-			# if [[ $RUNTIME_POW -eq 0 ]]; then 
 			RUNTIME_POW=$((($TIMESTAMP_START_DISK - $TIMESTAMP_START_POW) / 60))
-			#; fi
-			# if [[ $RUNTIME_DISK -eq 0 ]]; then 
 			RUNTIME_DISK=$((($NOW - $TIMESTAMP_START_DISK) / 60))
-			#; fi
 			RUNTIME_OVERALL=$(($RUNTIME_POW + $RUNTIME_DISK))
 
-			# READ_RATE_MiB=$( echo "scale=2; ( ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / (($RUNTIME_DISK * 60) + 1 * 1024 * 1024) )" | bc )
-			# READ_RATE_MiB=$( echo "scale=2; ( ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / (($RUNTIME_DISK * 60) + 1 * 1024 * 1024 * 1024 ) )" | bc )
-			# $PROVING_PROGRESS_PERCENT
-			# $RUNTIME_DISK_MIN
-			# TOTAL_BYTES_PROCESSED=$(echo "$NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)" | bc)
-            # RUNTIME_DISK_SECONDS=$(echo "$RUNTIME_DISK * 60" | bc)
-            # READ_RATE_MiB=$(echo "scale=2; $TOTAL_BYTES_PROCESSED / $RUNTIME_DISK_SECONDS / 1024 / 1024" | bc)
-            # READ_RATE_MiB=$(echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / ($RUNTIME_DISK * 60) / 1024 / 1024" | bc)
             if [ $RUNTIME_DISK -eq 0 ]; then
                 READ_RATE_MiB=0
             else
@@ -407,17 +385,11 @@ function set_proving_state {
 			if [[ $TIMESTAMP_START_DISK -eq 0 ]]; then TIMESTAMP_START_DISK=$NOW; fi
 			if [[ $TIMESTAMP_FINISH -eq 0 ]]; then TIMESTAMP_FINISH=$NOW; fi
 
-			#if [[ $RUNTIME_POW -eq 0 ]]; then 
 			RUNTIME_POW=$((($TIMESTAMP_START_DISK - $TIMESTAMP_START_POW) / 60))
-			#; fi
-			#if [[ $RUNTIME_DISK -eq 0 ]]; then 
 			RUNTIME_DISK=$((($TIMESTAMP_FINISH - $TIMESTAMP_START_DISK) / 60))
-			#; fi
 			RUNTIME_OVERALL=$(($RUNTIME_POW + $RUNTIME_DISK))
 
-			#if [[ $RUNTIME_DISK -ne 0 ]]; then 
 			READ_RATE_MiB=$( echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / (($RUNTIME_DISK * 60) + 1 * 1024 * 1024)" | bc )
-			#; fi
 		;;
 		*)	
 			# OFFLINE or READY
@@ -474,12 +446,6 @@ function set_services_state {
 
 	for SERVICE in $SERVICES
 	do
-		# if node.poet.services[] is empty, don't test.
-
-		# test if services[].post.id is in node.poet.services[]
-		# if in set_proving_state & log service debug
-		# else log debug service not in managed services
-
 		set_proving_state "${SERVICE}"
 	done
 }
@@ -517,10 +483,8 @@ function cycle_gap_is_open {
 
 	if [[ "${EPOCH_PHASE}" == CYCLE_GAP* ]]
 	then
-		# send_log 4 "cycle gap has opened"
 		return 0	# true
 	else 
-		# send_log 4 "waiting for cycle gap to open..."
 		return 1	# false
 	fi
 }
@@ -584,8 +548,7 @@ function start_next_service {
 	docker start $SERVICE_NAME > /dev/null 2>&1
 	send_log 3 "starting $SERVICE_NAME"
 
-	# zero out runtime metrics
-	# move to new epoch function
+	# zero out runtime state metrics
 	CURRENT_STATE=$(echo "$CURRENT_STATE" | jq \
 		--arg name "$SERVICE_NAME" \
 		'.services |= map(
@@ -618,7 +581,6 @@ function start_workflow {
 	#	- phased_workflow			"workflow: [optimal] start each service once running services have completed PROVING_POW"
 	#	- linear_workflow			"workflow: start each service once running services have completed all proving"
 	#   - monitor_only_workflow		"workflow: disabled - monitoring only"
-	# ( should be set per node )
 
 	send_log 3 "phased_workflow: start each service once running services have completed PROVING_POW"
 	set_current_state
@@ -651,19 +613,10 @@ function main {
 	send_log 3 "loading psm configuration..."
 	load_configuration
 
-	# 
-
 	while true
 	do 
-		# load nodes json
-
-		# for each node (pass node in as json object)
-		# send_log NODE xyz on POET 123
 		send_log 3 "" 
 		start_workflow 
-		# only use the lesser $DELAY value
-		# end for each
-
 		send_log 3 "waiting ${DELAY} seconds before checking state again..."
 		sleep $DELAY
 	done

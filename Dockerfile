@@ -59,6 +59,3 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["bash", "-c", "psm.sh"]
-
-# -------------------------------------------------------------------------------------------------
-# docker build --build-arg GRPCURL_TAG=v1.9.1 -t smh-psm:latest -t smh-psm:v0.2 .
