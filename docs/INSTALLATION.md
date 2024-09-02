@@ -17,9 +17,7 @@ git clone https://github.com/tjb-altf4/spacemesh-psm.git
 cd spacemesh-psm
 
 # build the `psm` docker image
-docker build \
-    --build-arg GRPCURL_TAG=v1.9.1 \
-    -t smh-psm:latest .
+docker build -t smh-psm:latest .
 ```
 
 Continue to [CONFIGURATION instructions](CONFIGURATION.md) 

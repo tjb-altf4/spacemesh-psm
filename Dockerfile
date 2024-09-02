@@ -7,7 +7,7 @@ ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
 
 # Define build argument for the tag
-ARG GRPCURL_TAG=master
+ARG GRPCURL_TAG=v1.9.1
 
 # Clone grpcurl repository and checkout the specified tag
 RUN git clone https://github.com/fullstorydev/grpcurl.git /go/src/github.com/fullstorydev/grpcurl && \
