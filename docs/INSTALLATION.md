@@ -5,9 +5,12 @@ Assumptions:
 - Docker is already up and running.
 - Node and post-services containers are already configured and working without `psm`.
 - A custom docker network has been created for spacemesh nodes, post-service and `psm` to utilise (allows connection by container name).
-- Set up instructions are written for a Linux environment, but Windows/WSL should work with minor changes to build/run cmds (not tested).
 
-### Build psm Docker image
+### Option 1: Utilise pre-built psm Docker images
+Automated image builds for both tagged releases, and commit triggered updates (edge) are available.  
+For pull details, see https://github.com/tjb-altf4/spacemesh-psm/pkgs/container/spacemesh-psm
+
+### Option 2: Manually build psm Docker image
 
 ```bash
 # clone the repo
