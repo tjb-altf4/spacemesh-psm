@@ -20,6 +20,8 @@ RUN git clone https://github.com/fullstorydev/grpcurl.git /go/src/github.com/ful
 # Stage 2: Create the final image
 FROM ubuntu:22.04
 
+LABEL org.opencontainers.image.source=https://github.com/tjb-altf4/spacemesh-psm
+
 # set default log level as INFO
 ENV PSM_LOG_LEVEL=3
 
