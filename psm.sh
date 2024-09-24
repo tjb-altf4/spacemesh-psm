@@ -17,6 +17,8 @@ function load_configuration {
 	CURRENT_STATE=$(jq -c '.' /psm/config.json)
 	validate_json "$CURRENT_STATE" || { send_log 0 "FATAL" "json validation failed. EXITING..."; exit 1; }
 
+	NODE_PROVING_READY=false	# helper variable to limit excessive node queries
+
 	NODE=$(echo "$CURRENT_STATE" | jq -r '.node["name"]')
 	NODE_IP_ADDRESS=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["ip_address"]')
 	NODE_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["node_listener_port"]')
@@ -481,12 +483,30 @@ function cycle_gap_is_open {
 	local NODE_ENDPOINT_ONLINE=$(echo "$CURRENT_STATE" | jq -r '.node.state.online')
 	local EPOCH_PHASE=$(echo "$CURRENT_STATE" | jq -r '.node.state.phase')
 
+	# if cycle gap is open, but poet proof is late, then consider cycle gap closed
+	# this prevents services starting in an indeterminate proving state
 	if [[ "${EPOCH_PHASE}" == CYCLE_GAP* ]]
 	then
-		return 0	# true
-	else 
-		return 1	# false
+		# do not check if node has received poet proof, if already confirmed for this cycle gap
+		# this creates an allowance for node to go offline and not impact starting services
+		if [[ "${NODE_PROVING_READY}" == false ]]
+		then
+			local PAYLOAD=$($GRPCURL -plaintext $NODE_SERVICE spacemesh.v1.PostInfoService.PostStates 2>/dev/null)
+			NODE_PROVING_READY=$(echo "$PAYLOAD" | grep -q "PROVING" && echo true || echo false)
+		fi
+
+		if [[ "${NODE_PROVING_READY}" == true ]]
+		then
+			# cycle_gap_is_open=true
+			return 0
+		fi
 	fi
+
+	# false if not in cycle gap
+	NODE_PROVING_READY=false
+
+	# cycle_gap_is_open=false
+	return 1
 }
 
 function any_services_proving_pow {	
