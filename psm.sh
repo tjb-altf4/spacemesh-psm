@@ -376,11 +376,11 @@ function set_proving_state {
 			RUNTIME_DISK=$((($NOW - $TIMESTAMP_START_DISK) / 60))
 			RUNTIME_OVERALL=$(($RUNTIME_POW + $RUNTIME_DISK))
 
-            if [ $RUNTIME_DISK -eq 0 ]; then
-                READ_RATE_MiB=0
-            else
-                READ_RATE_MiB=$(echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / ($RUNTIME_DISK * 60) / 1024 / 1024" | bc)
-            fi
+			if [ $RUNTIME_DISK -eq 0 ]; then
+				READ_RATE_MiB=0
+			else
+				READ_RATE_MiB=$(echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / ($RUNTIME_DISK * 60) / 1024 / 1024" | bc)
+			fi
 		;;
 		WAITING | DONE)
 			if [[ $TIMESTAMP_START_POW -eq 0 ]]; then TIMESTAMP_START_POW=$NOW; fi
@@ -595,6 +595,10 @@ function stop_idle_services {
 	done
 }
 
+function export_state {
+	echo $CURRENT_STATE > /psm/state.json
+}
+
 function start_workflow {	
 	# future workflow types:
 	#	- parallel_workflow			"workflow: start all services in parallel (unmanaged)"
@@ -638,6 +642,7 @@ function main {
 		send_log 3 "" 
 		start_workflow 
 		send_log 3 "waiting ${DELAY} seconds before checking state again..."
+		export_state
 		sleep $DELAY
 	done
 }
