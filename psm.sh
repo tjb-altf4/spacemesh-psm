@@ -116,23 +116,23 @@ function validate_json {
 }
 
 function convert_to_seconds {
-    local input=$1
-    local length=${#input}
-    local number=${input%?}
-    local unit=${input:$length-1:1}
+    local INPUT=$1
+    local LENGTH=${#INPUT}
+    local NUMBER=${INPUT%?}
+    local UNIT=${INPUT:$LENGTH-1:1}
 
-    case $unit in
+    case $UNIT in
         "s")
-            echo $number
+            echo $NUMBER
             ;;
         "m")
-            echo $(($number * 60))
+            echo $(($NUMBER * 60))
             ;;
         "h")
-            echo $(($number * 3600))
+            echo $(($NUMBER * 3600))
             ;;
         "d")
-            echo $(($number * 86400))
+            echo $(($NUMBER * 86400))
             ;;
         *)
             echo "Invalid unit. Please use s for seconds, m for minutes, h for hours, or d for days."
@@ -143,11 +143,42 @@ function convert_to_seconds {
 function convert_to_layers {
 	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
 
-    local input=$1
-    local seconds=$(convert_to_seconds $input)
-    local layers=$(($seconds / $LAYER_DURATION))
+    local INPUT=$1
+    local SECONDS=$(convert_to_seconds $INPUT)
+    local LAYERS=$(($SECONDS / $LAYER_DURATION))
 
-    echo $layers
+    echo $LAYERS
+}
+
+function convert_layer_to_datetime {
+    local LAYERS=$1
+	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
+
+    local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))	# convert layers to seconds
+    local CURRENT_TIME=$(date +%s)  					# get the current time in unix timestamp
+    local TARGET_TIME=$((CURRENT_TIME + TOTAL_SECONDS))
+
+    date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"  		# format output datetime
+}
+
+function convert_layer_to_countdown {
+    local LAYERS=$1
+	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
+
+	local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))	# convert layers to seconds
+	local DAYS=$((TOTAL_SECONDS / 86400))
+	local HOURS=$(( (TOTAL_SECONDS % 86400) / 3600 ))
+	local MINUTES=$(( (TOTAL_SECONDS % 3600) / 60 ))
+
+    if (( DAYS == 0 && HOURS == 0 && MINUTES == 0 )); then
+        echo ""
+    elif (( DAYS == 0 && HOURS == 0 )); then
+        printf "%02dm\n" $MINUTES
+    elif (( DAYS == 0 )); then
+        printf "%02dh %02dm\n" $HOURS $MINUTES
+    else
+        printf "%dd %02dh %02dm\n" $DAYS $HOURS $MINUTES
+    fi
 }
 
 function send_log {
@@ -347,13 +378,13 @@ function set_proving_state {
 		esac
 	fi
 
-	local TIMESTAMP_START_POW=$(echo "$SERVICE" | jq -r '.runtime.timestamp_start_pow')
-	local TIMESTAMP_START_DISK=$(echo "$SERVICE" | jq -r '.runtime.timestamp_start_disk')
-	local TIMESTAMP_FINISH=$(echo "$SERVICE" | jq -r '.runtime.timestamp_finish')
-	local RUNTIME_POW=$(echo "$SERVICE" | jq -r '.runtime.runtime_pow')
-	local RUNTIME_DISK=$(echo "$SERVICE" | jq -r '.runtime.runtime_disk')
-	local RUNTIME_OVERALL=$(echo "$SERVICE" | jq -r '.runtime.runtime_overall')
-	local READ_RATE_MiB=$(echo "$SERVICE" | jq -r '.runtime.read_rate_mib')
+	local TIMESTAMP_START_POW=$(echo "$SERVICE" | jq -r '.state.runtime.timestamp_start_pow')
+	local TIMESTAMP_START_DISK=$(echo "$SERVICE" | jq -r '.state.runtime.timestamp_start_disk')
+	local TIMESTAMP_FINISH=$(echo "$SERVICE" | jq -r '.state.runtime.timestamp_finish')
+	local RUNTIME_POW=$(echo "$SERVICE" | jq -r '.state.runtime.runtime_pow')
+	local RUNTIME_DISK=$(echo "$SERVICE" | jq -r '.state.runtime.runtime_disk')
+	local RUNTIME_OVERALL=$(echo "$SERVICE" | jq -r '.state.runtime.runtime_overall')
+	local READ_RATE_MiB=$(echo "$SERVICE" | jq -r '.state.runtime.read_rate_mib')
 
 	case $PROVING_PHASE in
 		PROVING_POW)
@@ -424,13 +455,13 @@ function set_proving_state {
 				.state.phase = $phase |
 				.state.progress = $progress |
 				.state.nonce = $nonce |
-				.runtime.timestamp_start_pow = $tspow |
-				.runtime.timestamp_start_disk = $tsdisk |
-				.runtime.timestamp_finish = $tsfinish |
-				.runtime.read_rate_mib = $readrate |
-				.runtime.runtime_pow = $rpow |
-				.runtime.runtime_disk = $rdisk |
-				.runtime.runtime_overall = $roverall
+				.state.runtime.timestamp_start_pow = $tspow |
+				.state.runtime.timestamp_start_disk = $tsdisk |
+				.state.runtime.timestamp_finish = $tsfinish |
+				.state.runtime.read_rate_mib = $readrate |
+				.state.runtime.runtime_pow = $rpow |
+				.state.runtime.runtime_disk = $rdisk |
+				.state.runtime.runtime_overall = $roverall
 			) else . 
 		end)'
 	)
@@ -600,10 +631,9 @@ function export_state {
 }
 
 function show_metrics {
-		node_metrics
-		poet_metrics
-		layer_metrics
-		postservice_metrics
+	node_metrics
+	layer_metrics
+	postservice_metrics
 }
 
 function node_metrics {
@@ -612,35 +642,20 @@ function node_metrics {
 	local NODE_PHASE=$(echo "$CURRENT_STATE" | jq -r '.node.state.phase')
 	local NODE_ONLINE=$(echo "$CURRENT_STATE" | jq -r '.node.state.online')
 	local NODE_SYNC=$(echo "$CURRENT_STATE" | jq -r '.node.state.is_synced')
-
-	HEADER_PADDING='%-50s\n'
-	COLUMN_PADDING='%-12s %8s %8s %8s %7s %s\n'
-
-	send_log 3 ""
-	send_log 3 "$(printf "$HEADER_PADDING" 'NODE STATE --------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" 'phase'       'epoch'  'layer'  'online'  'sync' ) "
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" "${NODE_PHASE}" "${NODE_EPOCH}" "${NODE_LAYER}" "${NODE_ONLINE}" "${NODE_SYNC}") "
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
-	send_log 3 ""
-}
-
-function poet_metrics {
 	local POET_NAME=$(echo "$CURRENT_STATE" | jq -r '.node.poet.name')
 	local POET_CYCLEGAP=$(echo "$CURRENT_STATE" | jq -r '.node.poet.cycle_gap')
 	local POET_PHASESHIFT=$(echo "$CURRENT_STATE" | jq -r '.node.poet.phase_shift')
 	local POET_GRACEPERIOD=$(echo "$CURRENT_STATE" | jq -r '.node.poet.grace_period')
 
-	local HEADER_PADDING='%-50s\n'
-	local COLUMN_PADDING='%-20s %8s %8s %8s %s\n'
+	HEADER_PADDING='%-100s\n'
+	COLUMN_PADDING='%-22s %8s %8s %8s %6s %1s %-20s %9s %7s %7s %s\n'
 
 	send_log 3 ""
-	send_log 3 "$(printf "$HEADER_PADDING" 'POET STATE --------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" 'poet' 'cycle gap' 'shift' 'grace') "
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" "$POET_NAME" "$POET_CYCLEGAP" "$POET_PHASESHIFT" "$POET_GRACEPERIOD") "
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
-	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" 'NODE STATE ------------------------------------------------------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'phase'       'epoch'  'layer'  'online'  'sync' '' 'poet' 'cycle gap' 'shift' 'grace') "
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" "${NODE_PHASE}" "${NODE_EPOCH}" "${NODE_LAYER}" "${NODE_ONLINE}" "${NODE_SYNC}" "" "$POET_NAME" "$POET_CYCLEGAP" "$POET_PHASESHIFT" "$POET_GRACEPERIOD") "
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
 }
 
 function layer_metrics {
@@ -655,27 +670,29 @@ function layer_metrics {
 	] | sort_by(.layer)
 	')
 
-	local HEADER_PADDING='%-50s\n'
-	local COLUMN_PADDING='%-21s %10s %14s %s\n'
+	local HEADER_PADDING='%-100s\n'
+    local COLUMN_PADDING='%-24s %12s %17s %5s %9s %29s %s\n'
 
 	send_log 3 ""
-	send_log 3 "$(printf "$HEADER_PADDING" 'LAYER STATE -------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" 'event' 'layer' 'countdown') "
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 "$(printf "$HEADER_PADDING" 'LAYER STATE -----------------------------------------------------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'event' 'until layer' 'until time' '' 'at layer' 'at time') "
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
 
-	echo "$LAYER_STATE" | jq -r '.[] | [.event, .layer, .countdown] | @tsv' | while IFS=$'\t' read -r event layer countdown; do
-		send_log 3 "$(printf "$COLUMN_PADDING" "$event" "$layer" "$countdown") "
+	echo "$LAYER_STATE" | jq -r '.[] | [.event, .layer, .countdown] | @tsv' | while IFS=$'\t' read -r EVENT LAYER COUNTDOWN; do	
+		local COUNTDOWN_HOURS=$(if (( COUNTDOWN <= 0 )); then echo "-"; else convert_layer_to_countdown $COUNTDOWN; fi)
+		local LAYER_DATE=$(convert_layer_to_datetime $COUNTDOWN)
+	    send_log 3 "$(printf "$COLUMN_PADDING" "$EVENT" "$COUNTDOWN" "$COUNTDOWN_HOURS" "" "$LAYER" "$LAYER_DATE") "
 	done
 
-	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
-	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
 }
 
 function postservice_metrics {
 	local HEADER_PADDING='%-100s\n'
-	local COLUMN_PADDING='%-16s %-8s %4s %-0s %-14s %10s %12s %15s %10s %-8s %s\n'
+	local COLUMN_PADDING='%-18s %-6s %4s %-0s %-14s %10s %10s %15s %10s %-8s %s\n'
 
-	send_log 3 "$(printf "$HEADER_PADDING" 'POSTSERVICE STATE -----------------------------------------------------------------------------------------') "
+	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" 'POST SERVICE STATE ----------------------------------------------------------------------------------------') "
 	send_log 3 "$(printf "$COLUMN_PADDING" 'name'             'id' 'su' '' 'phase'         'progress'    'nonces'    'disk speed'  'runtime' '(PoW)') "
 	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
 	
@@ -687,24 +704,32 @@ function postservice_metrics {
 			(
 				if .state.phase | IN("OFFLINE", "READY") 
 				then [
-					" ", 
+					" "
+				] 
+				else [
+					(if .state.progress == "0" then " " else (.state.progress|tostring + " %") end)
+				] 
+				end | .[]
+			),
+			(
+				if .state.phase | IN("OFFLINE", "READY", "DONE") 
+				then [
 					" ", 
 					" ", 
 					" ", 
 					" "
 				] 
 				else [
-					(.state.progress|tostring + " %"),
-					.state.nonce,
-					(.state.runtime.read_rate_mib|tostring + " MiB/s"),
-					(.state.runtime.runtime_overall|tostring + "m"),
-					("(" + (.state.runtime.runtime_pow|tostring) + "m)")
+					(if .state.nonce == "" then " " else .state.nonce end),
+					(if .state.runtime.read_rate_mib == 0 then " " else (.state.runtime.read_rate_mib|tostring + " MiB/s") end),
+					(if .state.runtime.runtime_overall == 0 then " " else (.state.runtime.runtime_overall|tostring + "m") end),
+					(if .state.runtime.runtime_pow == 0 then " " else ("(" + (.state.runtime.runtime_pow|tostring) + "m)") end)
 				] 
 				end | .[]
 			)
 		] | @tsv' | \
-		while IFS=$'\t' read -r name post_id su phase progress nonces disk_speed runtime pow; do
-			send_log 3 "$(printf "$COLUMN_PADDING" "$name" "$post_id" "$su" "" "$phase" "$progress" "$nonces" "$disk_speed" "$runtime" "$pow") "
+		while IFS=$'\t' read -r NAME POST_ID SU PHASE PROGRESS NONCES DISK_SPEED RUNTIME POW; do
+			send_log 3 "$(printf "$COLUMN_PADDING" "$NAME" "$POST_ID" "$SU" "" "$PHASE" "$PROGRESS" "$NONCES" "$DISK_SPEED" "$RUNTIME" "$POW") "
 		done
 
 	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "

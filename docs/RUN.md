@@ -46,20 +46,33 @@ If all is running correctly `psm` will start logging information such as epoch d
 docker logs -f -n 90 smh-psm-01
 ```
 ```log
-2024-08-31 13:24:18       INFO       [main]                         
-2024-08-31 13:24:18       INFO       [start_workflow]               phased_workflow: start each service once running services have completed PROVING_POW
-2024-08-31 13:24:18       INFO       [set_current_state]            loading network state...
-2024-08-31 13:24:22       INFO       [set_node_sync_state]          NODE smh-node-01 is synced
-2024-08-31 13:24:22       INFO       [set_network_state]            epoch 29 layer 119200
-2024-08-31 13:24:22       INFO       [set_current_state]            loading poet state...
-2024-08-31 13:24:23       INFO       [set_poet_state]               epoch 29 open from: 116928(-2272) to 120959(1759)
-2024-08-31 13:24:23       INFO       [set_poet_state]               epoch 29 cycle gap open from: 120096(896) to 120384(1184)
-2024-08-31 13:24:23       INFO       [set_poet_state]               epoch 29 cycle gap registration open from: 120360(1160) to 120384(1184)
-2024-08-31 13:24:23       INFO       [set_poet_state]               epoch 29 current phase: EPOCH_OPENING
-2024-08-31 13:24:23       INFO       [set_current_state]            loading post-services state...
-2024-08-31 13:24:23       INFO       [set_proving_state]            smh-post-01 phase: OFFLINE
-2024-08-31 13:24:24       INFO       [set_proving_state]            smh-post-02 phase: OFFLINE
-2024-08-31 13:24:26       INFO       [main]                         waiting 300 seconds before checking state again...
-2024-08-31 13:29:26       INFO       [main] 
+2024-10-07 16:26:44       INFO       [node_metrics]                 
+2024-10-07 16:26:44       INFO       [node_metrics]                 NODE STATE ------------------------------------------------------------------------------------------------ 
+2024-10-07 16:26:44       INFO       [node_metrics]                 phase                     epoch    layer   online   sync   poet                 cycle gap   shift   grace  
+2024-10-07 16:26:44       INFO       [node_metrics]                 ----------------------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:44       INFO       [node_metrics]                 CYCLE_GAP                    31   128199     true   true   team24 early phase         24h    288h      2h  
+2024-10-07 16:26:45       INFO       [node_metrics]                 ----------------------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [layer_metrics]                
+2024-10-07 16:26:45       INFO       [layer_metrics]                LAYER STATE ----------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [layer_metrics]                event                     until layer        until time        at layer                       at time  
+2024-10-07 16:26:45       INFO       [layer_metrics]                ----------------------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [layer_metrics]                epoch open                      -3207                 -          124992        15-Dec-2025 16:26 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                cycle gap open                    -39                 -          128160        26-Dec-2025 16:26 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                *                                   0                 -          128199        26-Dec-2025 19:41 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                registration open                 225           18h 45m          128424        27-Dec-2025 14:26 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                cycle gap closed                  249           20h 45m          128448        27-Dec-2025 16:26 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                epoch closed                      824        2d 20h 40m          129023        29-Dec-2025 16:21 AWST  
+2024-10-07 16:26:45       INFO       [layer_metrics]                ----------------------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [postservice_metrics]          
+2024-10-07 16:26:45       INFO       [postservice_metrics]          POST SERVICE STATE ---------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [postservice_metrics]          name               id       su  phase            progress     nonces      disk speed    runtime (PoW)     
+2024-10-07 16:26:45       INFO       [postservice_metrics]          ----------------------------------------------------------------------------------------------------------- 
+2024-10-07 16:26:45       INFO       [postservice_metrics]          smh-post-01        V1XyOD   32  PROVING_DISK      17.38 %     0..288    152.35 MiB/s        39m           
+2024-10-07 16:26:45       INFO       [postservice_metrics]          smh-post-02        zLC0oR   64  PROVING_DISK       7.67 %     0..288    125.47 MiB/s        39m           
+2024-10-07 16:26:46       INFO       [postservice_metrics]          smh-post-03        XhtD+T  192  DONE             100.00 %                                                 
+2024-10-07 16:26:46       INFO       [postservice_metrics]          smh-post-04        JdVfo7  192  PROVING_DISK       1.11 %   144..288     53.77 MiB/s        39m           
+2024-10-07 16:26:46       INFO       [postservice_metrics]          smh-post-05        Jn/vUe  192  PROVING_DISK        .35 %     0..288                        38m (24m)     
+2024-10-07 16:26:46       INFO       [postservice_metrics]          smh-post-06        DM/i4R  192  PROVING_POW                   0..288                        13m (13m)     
+2024-10-07 16:26:46       INFO       [postservice_metrics]          ----------------------------------------------------------------------------------------------------------- 
 ```
 You might see you post-services briefly start in READY state before `psm` shuts them down, waiting for next cycle gap.
