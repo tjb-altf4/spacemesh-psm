@@ -6,7 +6,7 @@ Although `psm` has some basic quality checking, it is a users responsibility to 
 
 ### Node section
 Configuration for the node that your post-services connect to:
-- `name` is the name for your node (label only).
+- `name` is the container name for your node.
 - `endpoint` should be updated with node connection details,
   - `metrics` is not currently used and can be left blank.
 - `poet` same as go-spacemesh `config.mainnet.json` poet key, directly influences `psm` behaviour.
