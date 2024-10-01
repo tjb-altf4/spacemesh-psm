@@ -244,10 +244,10 @@ function set_poet_state {
 		fi
 	)
 
-	send_log 3 "epoch ${CURRENT_EPOCH} open from: ${EPOCH_OPENED_LAYER}(${EPOCH_OPENED_COUNTDOWN_LAYER}) to ${EPOCH_CLOSED_LAYER}(${EPOCH_CLOSED_COUNTDOWN_LAYER})"	
-	send_log 3 "epoch ${CURRENT_EPOCH} cycle gap open from: ${CYCLE_GAP_OPENED_LAYER}(${CYCLE_GAP_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
-	send_log 3 "epoch ${CURRENT_EPOCH} cycle gap registration open from: ${REGISTRATION_OPENED_LAYER}(${REGISTRATION_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
-	send_log 3 "epoch ${CURRENT_EPOCH} current phase: ${EPOCH_PHASE}"
+	send_log 4 "epoch ${CURRENT_EPOCH} open from: ${EPOCH_OPENED_LAYER}(${EPOCH_OPENED_COUNTDOWN_LAYER}) to ${EPOCH_CLOSED_LAYER}(${EPOCH_CLOSED_COUNTDOWN_LAYER})"	
+	send_log 4 "epoch ${CURRENT_EPOCH} cycle gap open from: ${CYCLE_GAP_OPENED_LAYER}(${CYCLE_GAP_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
+	send_log 4 "epoch ${CURRENT_EPOCH} cycle gap registration open from: ${REGISTRATION_OPENED_LAYER}(${REGISTRATION_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
+	send_log 4 "epoch ${CURRENT_EPOCH} current phase: ${EPOCH_PHASE}"
 
 	CURRENT_STATE=$(echo "$CURRENT_STATE" | jq "
 		.network.state.epoch_opened_layer = ${EPOCH_OPENED_LAYER} |
@@ -281,7 +281,7 @@ function set_network_state {
 	CURRENT_STATE=$(jq ".network.state.epoch = $CURRENT_EPOCH | \
 						.network.state.layer = $CURRENT_LAYER" <<< "$CURRENT_STATE")
 	
-	send_log 3 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
+	send_log 4 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
 }
 
 function set_node_sync_state {
@@ -289,7 +289,7 @@ function set_node_sync_state {
 
 	CURRENT_STATE=$(jq ".node.state.is_synced = $IS_SYNCED" <<< "$CURRENT_STATE")	
 
-	send_log 3 "NODE ${NODE_IP_ADDRESS} $( [ "$IS_SYNCED" = "true" ] && echo "is synced" || echo "is NOT synced" )"
+	send_log 4 "NODE ${NODE_IP_ADDRESS} $( [ "$IS_SYNCED" = "true" ] && echo "is synced" || echo "is NOT synced" )"
 }
 
 function set_proving_state {
@@ -438,7 +438,7 @@ function set_proving_state {
 	local SEND_LOG_MESSAGE="${SERVICE_NAME} phase: ${PROVING_PHASE}"
 	[[ -n ${PROVING_NONCE} ]] && SEND_LOG_MESSAGE+="  progress: ${PROVING_PROGRESS} % (${PROVING_NONCE})  speed: ${READ_RATE_MiB} MiB/s"
 	[[ ${PROVING_PHASE} != "READY" && ${PROVING_PHASE} != "OFFLINE" ]] && SEND_LOG_MESSAGE+="  runtime: ${RUNTIME_OVERALL}m (pow=${RUNTIME_POW}m disk=${RUNTIME_DISK}m)"
-	send_log 3 "$SEND_LOG_MESSAGE"
+	send_log 4 "$SEND_LOG_MESSAGE"
 
 }
 
