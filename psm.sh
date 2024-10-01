@@ -679,13 +679,37 @@ function postservice_metrics {
 	send_log 3 "$(printf "$COLUMN_PADDING" 'name'             'id' 'su' '' 'phase'         'progress'    'nonces'    'disk speed'  'runtime' '(PoW)') "
 	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
 	
-	echo "$CURRENT_STATE" | jq -r '.services[] | [.name, .post.id[0:6], .post.numunits, .state.phase, (.state.progress|tostring + " %"), .state.nonce, (.state.runtime.read_rate_mib|tostring + " MiB/s"), (.state.runtime.runtime_overall|tostring + "m"), ("(" + (.state.runtime.runtime_pow|tostring) + "m)")] | @tsv' | \
+	echo "$CURRENT_STATE" | jq -r '.services[] | [
+			.name, 
+			.post.id[0:6], 
+			.post.numunits, 
+			.state.phase, 
+			if .state.progress == 0 
+				then " " 
+				else (.state.progress|tostring + " %")
+				end,
+			if .state.nonce == "" 
+				then " " 
+				else .state.nonce 
+				end,
+			if .state.runtime.read_rate_mib == 0 
+				then " " 
+				else (.state.runtime.read_rate_mib|tostring + " MiB/s") 
+				end,
+			if .state.runtime.runtime_overall == 0 
+				then " " 
+				else (.state.runtime.runtime_overall|tostring + "m") 
+				end,
+			if .state.runtime.runtime_pow == 0 
+				then " " 
+				else ("(" + (.state.runtime.runtime_pow|tostring) + "m)")
+				end				
+		] | @tsv' | \
 		while IFS=$'\t' read -r name post_id su phase progress nonces disk_speed runtime pow; do
 			send_log 3 "$(printf "$COLUMN_PADDING" "$name" "$post_id" "$su" "" "$phase" "$progress" "$nonces" "$disk_speed" "$runtime" "$pow") "
 		done
 
 	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
-
 }
 
 function start_workflow {	
