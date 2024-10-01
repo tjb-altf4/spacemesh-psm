@@ -491,7 +491,7 @@ function cycle_gap_is_open {
 		# this creates an allowance for node to go offline and not impact starting services
 		if [[ "${NODE_PROVING_READY}" == false ]]
 		then
-			local PAYLOAD=$($GRPCURL -plaintext $NODE_SERVICE spacemesh.v1.PostInfoService.PostStates 2>/dev/null)
+			local PAYLOAD=$($GRPCURL -plaintext $POST_SERVICE spacemesh.v1.PostInfoService.PostStates 2>/dev/null)
 			NODE_PROVING_READY=$(echo "$PAYLOAD" | grep -q "PROVING" && echo true || echo false)
 		fi
 
