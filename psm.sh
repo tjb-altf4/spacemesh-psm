@@ -244,10 +244,10 @@ function set_poet_state {
 		fi
 	)
 
-	send_log 3 "epoch ${CURRENT_EPOCH} open from: ${EPOCH_OPENED_LAYER}(${EPOCH_OPENED_COUNTDOWN_LAYER}) to ${EPOCH_CLOSED_LAYER}(${EPOCH_CLOSED_COUNTDOWN_LAYER})"	
-	send_log 3 "epoch ${CURRENT_EPOCH} cycle gap open from: ${CYCLE_GAP_OPENED_LAYER}(${CYCLE_GAP_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
-	send_log 3 "epoch ${CURRENT_EPOCH} cycle gap registration open from: ${REGISTRATION_OPENED_LAYER}(${REGISTRATION_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
-	send_log 3 "epoch ${CURRENT_EPOCH} current phase: ${EPOCH_PHASE}"
+	send_log 4 "epoch ${CURRENT_EPOCH} open from: ${EPOCH_OPENED_LAYER}(${EPOCH_OPENED_COUNTDOWN_LAYER}) to ${EPOCH_CLOSED_LAYER}(${EPOCH_CLOSED_COUNTDOWN_LAYER})"	
+	send_log 4 "epoch ${CURRENT_EPOCH} cycle gap open from: ${CYCLE_GAP_OPENED_LAYER}(${CYCLE_GAP_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
+	send_log 4 "epoch ${CURRENT_EPOCH} cycle gap registration open from: ${REGISTRATION_OPENED_LAYER}(${REGISTRATION_OPENED_COUNTDOWN_LAYER}) to ${CYCLE_GAP_CLOSED_LAYER}(${CYCLE_GAP_CLOSED_COUNTDOWN_LAYER})"
+	send_log 4 "epoch ${CURRENT_EPOCH} current phase: ${EPOCH_PHASE}"
 
 	CURRENT_STATE=$(echo "$CURRENT_STATE" | jq "
 		.network.state.epoch_opened_layer = ${EPOCH_OPENED_LAYER} |
@@ -281,7 +281,7 @@ function set_network_state {
 	CURRENT_STATE=$(jq ".network.state.epoch = $CURRENT_EPOCH | \
 						.network.state.layer = $CURRENT_LAYER" <<< "$CURRENT_STATE")
 	
-	send_log 3 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
+	send_log 4 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
 }
 
 function set_node_sync_state {
@@ -289,7 +289,7 @@ function set_node_sync_state {
 
 	CURRENT_STATE=$(jq ".node.state.is_synced = $IS_SYNCED" <<< "$CURRENT_STATE")	
 
-	send_log 3 "NODE ${NODE_IP_ADDRESS} $( [ "$IS_SYNCED" = "true" ] && echo "is synced" || echo "is NOT synced" )"
+	send_log 4 "NODE ${NODE_IP_ADDRESS} $( [ "$IS_SYNCED" = "true" ] && echo "is synced" || echo "is NOT synced" )"
 }
 
 function set_proving_state {
@@ -376,11 +376,11 @@ function set_proving_state {
 			RUNTIME_DISK=$((($NOW - $TIMESTAMP_START_DISK) / 60))
 			RUNTIME_OVERALL=$(($RUNTIME_POW + $RUNTIME_DISK))
 
-            if [ $RUNTIME_DISK -eq 0 ]; then
-                READ_RATE_MiB=0
-            else
-                READ_RATE_MiB=$(echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / ($RUNTIME_DISK * 60) / 1024 / 1024" | bc)
-            fi
+			if [ $RUNTIME_DISK -eq 0 ]; then
+				READ_RATE_MiB=0
+			else
+				READ_RATE_MiB=$(echo "scale=2; ($NUMUNITS_BYTES * ($PROVING_PROGRESS / 100)) / ($RUNTIME_DISK * 60) / 1024 / 1024" | bc)
+			fi
 		;;
 		WAITING | DONE)
 			if [[ $TIMESTAMP_START_POW -eq 0 ]]; then TIMESTAMP_START_POW=$NOW; fi
@@ -438,7 +438,7 @@ function set_proving_state {
 	local SEND_LOG_MESSAGE="${SERVICE_NAME} phase: ${PROVING_PHASE}"
 	[[ -n ${PROVING_NONCE} ]] && SEND_LOG_MESSAGE+="  progress: ${PROVING_PROGRESS} % (${PROVING_NONCE})  speed: ${READ_RATE_MiB} MiB/s"
 	[[ ${PROVING_PHASE} != "READY" && ${PROVING_PHASE} != "OFFLINE" ]] && SEND_LOG_MESSAGE+="  runtime: ${RUNTIME_OVERALL}m (pow=${RUNTIME_POW}m disk=${RUNTIME_DISK}m)"
-	send_log 3 "$SEND_LOG_MESSAGE"
+	send_log 4 "$SEND_LOG_MESSAGE"
 
 }
 
@@ -595,6 +595,99 @@ function stop_idle_services {
 	done
 }
 
+function export_state {
+	echo $CURRENT_STATE > /psm/state.json
+}
+
+function show_metrics {
+		node_metrics
+		poet_metrics
+		layer_metrics
+		postservice_metrics
+}
+
+function node_metrics {
+	local NODE_EPOCH=$(echo "$CURRENT_STATE" | jq -r '.network.state.epoch')
+	local NODE_LAYER=$(echo "$CURRENT_STATE" | jq -r '.network.state.layer')
+	local NODE_PHASE=$(echo "$CURRENT_STATE" | jq -r '.node.state.phase')
+	local NODE_ONLINE=$(echo "$CURRENT_STATE" | jq -r '.node.state.online')
+	local NODE_SYNC=$(echo "$CURRENT_STATE" | jq -r '.node.state.is_synced')
+
+	HEADER_PADDING='%-50s\n'
+	COLUMN_PADDING='%-12s %8s %8s %8s %7s %s\n'
+
+	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" 'NODE STATE --------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'phase'       'epoch'  'layer'  'online'  'sync' ) "
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" "${NODE_PHASE}" "${NODE_EPOCH}" "${NODE_LAYER}" "${NODE_ONLINE}" "${NODE_SYNC}") "
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 ""
+}
+
+function poet_metrics {
+	local POET_NAME=$(echo "$CURRENT_STATE" | jq -r '.node.poet.name')
+	local POET_CYCLEGAP=$(echo "$CURRENT_STATE" | jq -r '.node.poet.cycle_gap')
+	local POET_PHASESHIFT=$(echo "$CURRENT_STATE" | jq -r '.node.poet.phase_shift')
+	local POET_GRACEPERIOD=$(echo "$CURRENT_STATE" | jq -r '.node.poet.grace_period')
+
+	local HEADER_PADDING='%-50s\n'
+	local COLUMN_PADDING='%-20s %8s %8s %8s %s\n'
+
+	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" 'POET STATE --------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'poet' 'cycle gap' 'shift' 'grace') "
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" "$POET_NAME" "$POET_CYCLEGAP" "$POET_PHASESHIFT" "$POET_GRACEPERIOD") "
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 ""
+}
+
+function layer_metrics {
+	local LAYER_STATE=$(jq -n --argjson state "$CURRENT_STATE" '
+	[
+		{ "event": "epoch open", 			"layer": $state.network.state.epoch_opened_layer, 		"countdown": $state.network.state.epoch_opened_countdown_layer 		},
+		{ "event": "epoch closed", 			"layer": $state.network.state.epoch_closed_layer, 		"countdown": $state.network.state.epoch_closed_countdown_layer 		},
+		{ "event": "cycle gap open", 		"layer": $state.node.state.cycle_gap_opened_layer, 		"countdown": $state.node.state.cycle_gap_opened_countdown_layer 	},
+		{ "event": "cycle gap closed", 		"layer": $state.node.state.cycle_gap_closed_layer, 		"countdown": $state.node.state.cycle_gap_closed_countdown_layer 	},
+		{ "event": "registration open", 	"layer": $state.node.state.registration_opened_layer, 	"countdown": $state.node.state.registration_opened_countdown_layer 	},
+		{ "event": "*", 					"layer": $state.network.state.layer, 					"countdown": 0 														}
+	] | sort_by(.layer)
+	')
+
+	local HEADER_PADDING='%-50s\n'
+	local COLUMN_PADDING='%-21s %10s %14s %s\n'
+
+	send_log 3 ""
+	send_log 3 "$(printf "$HEADER_PADDING" 'LAYER STATE -------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'event' 'layer' 'countdown') "
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+
+	echo "$LAYER_STATE" | jq -r '.[] | [.event, .layer, .countdown] | @tsv' | while IFS=$'\t' read -r event layer countdown; do
+		send_log 3 "$(printf "$COLUMN_PADDING" "$event" "$layer" "$countdown") "
+	done
+
+	send_log 3 "$(printf "$HEADER_PADDING" '-------------------------------------------------') "
+	send_log 3 ""
+}
+
+function postservice_metrics {
+	local HEADER_PADDING='%-100s\n'
+	local COLUMN_PADDING='%-16s %-8s %4s %-0s %-14s %10s %12s %15s %10s %-8s %s\n'
+
+	send_log 3 "$(printf "$HEADER_PADDING" 'POSTSERVICE STATE -----------------------------------------------------------------------------------------') "
+	send_log 3 "$(printf "$COLUMN_PADDING" 'name'             'id' 'su' '' 'phase'         'progress'    'nonces'    'disk speed'  'runtime' '(PoW)') "
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
+	
+	echo "$CURRENT_STATE" | jq -r '.services[] | [.name, .post.id[0:6], .post.numunits, .state.phase, (.state.progress|tostring + " %"), .state.nonce, (.state.runtime.read_rate_mib|tostring + " MiB/s"), (.state.runtime.runtime_overall|tostring + "m"), ("(" + (.state.runtime.runtime_pow|tostring) + "m)")] | @tsv' | \
+		while IFS=$'\t' read -r name post_id su phase progress nonces disk_speed runtime pow; do
+			send_log 3 "$(printf "$COLUMN_PADDING" "$name" "$post_id" "$su" "" "$phase" "$progress" "$nonces" "$disk_speed" "$runtime" "$pow") "
+		done
+
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
+
+}
+
 function start_workflow {	
 	# future workflow types:
 	#	- parallel_workflow			"workflow: start all services in parallel (unmanaged)"
@@ -638,6 +731,8 @@ function main {
 		send_log 3 "" 
 		start_workflow 
 		send_log 3 "waiting ${DELAY} seconds before checking state again..."
+		export_state
+		show_metrics
 		sleep $DELAY
 	done
 }
