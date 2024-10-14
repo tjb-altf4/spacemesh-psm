@@ -230,20 +230,21 @@ function set_online_state {
         wait $PID && SERVICE_ONLINE=true
         send_log 4 "${TYPE} ${NAME} ${IP} is $( $SERVICE_ONLINE && echo "online" || echo "offline" )"
 
-        if [ "$TYPE" == "NODE" ]; then
-            CURRENT_STATE=$(echo "${CURRENT_STATE}" | jq \
-                --arg online "$SERVICE_ONLINE" \
-                '.node.state.online = $online'
-            )
-        else
-            CURRENT_STATE=$(echo "${CURRENT_STATE}" | jq \
-                --arg name "$NAME" \
-                --arg online "$SERVICE_ONLINE" \
-                '.services |= map(
-                    if .name == $name then .state.online = $online else . end
-                )'
-            )
-        fi
+		if [ "$TYPE" == "NODE" ]; then
+			CURRENT_STATE=$(echo "${CURRENT_STATE}" | jq \
+				--arg online "$SERVICE_ONLINE" \
+				'.node.state.online = $online | 
+				if $online == "false" then .node.state.is_synced = false else . end'
+			)
+		else
+			CURRENT_STATE=$(echo "${CURRENT_STATE}" | jq \
+				--arg name "$NAME" \
+				--arg online "$SERVICE_ONLINE" \
+				'.services |= map(
+					if .name == $name then .state.online = $online else . end
+				)'
+			)
+		fi
     done
 }
 
