@@ -154,18 +154,18 @@ function convert_layer_to_datetime {
     local LAYERS=$1
 	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
 
-    local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))	# convert layers to seconds
-    local CURRENT_TIME=$(date +%s)  					# get the current time in unix timestamp
+    local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
+    local CURRENT_TIME=$(date +%s)                      # get the current time in unix timestamp
     local TARGET_TIME=$((CURRENT_TIME + TOTAL_SECONDS))
 
-    date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"  		# format output datetime
+    date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"        # format output datetime
 }
 
 function convert_layer_to_countdown {
     local LAYERS=$1
 	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
 
-	local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))	# convert layers to seconds
+	local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
 	local DAYS=$((TOTAL_SECONDS / 86400))
 	local HOURS=$(( (TOTAL_SECONDS % 86400) / 3600 ))
 	local MINUTES=$(( (TOTAL_SECONDS % 3600) / 60 ))
@@ -738,9 +738,9 @@ function postservice_metrics {
 
 function start_workflow {	
 	# future workflow types:
-	#	- parallel_workflow			"workflow: start all services in parallel (unmanaged)"
-	#	- phased_workflow			"workflow: [optimal] start each service once running services have completed PROVING_POW"
-	#	- linear_workflow			"workflow: start each service once running services have completed all proving"
+	#   - parallel_workflow			"workflow: start all services in parallel (unmanaged)"
+	#   - phased_workflow			"workflow: [optimal] start each service once running services have completed PROVING_POW"
+	#   - linear_workflow			"workflow: start each service once running services have completed all proving"
 	#   - monitor_only_workflow		"workflow: disabled - monitoring only"
 
 	send_log 3 "phased_workflow: start each service once running services have completed PROVING_POW"
@@ -748,12 +748,12 @@ function start_workflow {
 
 	if cycle_gap_is_open
 	then
-		DELAY=300										# slow state checks
-		if all_services_done; then return; fi			#  - nothing to manage until cycle gap ends
+		DELAY=300                                       # slow state checks
+		if all_services_done; then return; fi           #  - nothing to manage until cycle gap ends
 
-		DELAY=60										# fast state checks
-		if any_services_proving_pow; then return; fi	#  - wait for running service(s) to finish proving_pow, before starting another
-		if all_services_online; then return; fi			#  - monitor progress only: all services started
+		DELAY=60                                        # fast state checks
+		if any_services_proving_pow; then return; fi    #  - wait for running service(s) to finish proving_pow, before starting another
+		if all_services_online; then return; fi         #  - monitor progress only: all services started
 
 		start_next_service
 	else
