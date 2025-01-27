@@ -26,6 +26,8 @@ function load_configuration {
 
 	NODE_SERVICE="${NODE_IP_ADDRESS}:${NODE_LISTENER_PORT}"
 	POST_SERVICE="${NODE_IP_ADDRESS}:${POST_LISTENER_PORT}"
+
+	POST_SERVICE_PARALLEL=$(echo "$CURRENT_STATE" | jq -r '.node.post["service_parallel"] // 1')    # default to 1 service in p1
 }
 
 function validate_json {
@@ -205,7 +207,7 @@ function get_online_state {
 }
 
 function set_online_state {
-	PIDS=()		# reset array
+    PIDS=()		# reset array
 
     # check primary node
     local NODE_NAME=$(echo "${CURRENT_STATE}" | jq -r '.node.name')
@@ -543,10 +545,13 @@ function cycle_gap_is_open {
 
 function any_services_proving_pow {	
 	local SERVICES=$(echo $CURRENT_STATE | jq '[.services[] | select(.state.phase=="PROVING_POW")]')
+    local SERVICES_COUNT=$(jq 'length' <<< "$SERVICES")	
 
-	if [ "$SERVICES" == "[]" ]
+	send_log 4 "SERVICES_COUNT: ${SERVICES_COUNT}"
+    
+    if (( ${SERVICES_COUNT} < ${POST_SERVICE_PARALLEL} ))
 	then
-		send_log 4 "false: no services are in PROVING_POW phase"
+		send_log 4 "false: no services (or under threshold) are in PROVING_POW phase"
 		return 1
 	else
 		send_log 4 "true: one or more services are in PROVING_POW phase"

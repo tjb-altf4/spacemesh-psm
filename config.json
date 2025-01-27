@@ -37,6 +37,9 @@
             "cycle_gap_closed_countdown_layer": 0,
             "registration_opened_layer": 0,
             "registration_opened_countdown_layer": 0
+        },
+        "post": {
+            "service_parallel": 1
         }
     },
     "services": [
