@@ -11,6 +11,8 @@ Configuration for the node that your post-services connect to:
   - `metrics` is not currently used and can be left blank.
 - `poet` same as go-spacemesh `config.mainnet.json` poet key, directly influences `psm` behaviour.
 - `state` leave untouched, placeholder for capturing state data.
+- `post` 
+  - `service_parallel` number of running services in pow phase simultaneously, useful when using multiple k2pow services behind a proxy.
 
 There should be only one node specified, this is not an array.
 
@@ -39,6 +41,9 @@ There should be only one node specified, this is not an array.
             "cycle_gap_closed_countdown_layer": 0,
             "registration_opened_layer": 0,
             "registration_opened_countdown_layer": 0
+        },
+        "post": {
+            "service_parallel": 1
         }
     },
 ```
