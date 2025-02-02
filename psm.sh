@@ -10,6 +10,14 @@ LOG_LEVELS='{
 	"5": "TRACE"
 }'
 
+function build_info {
+	[[ -z $GIT_TAG ]] && [[ -z $GIT_BRANCH ]] && GIT_TAG="edge"					# 				edge release
+
+	[[ -n ${GIT_TAG} ]] && send_log 3 "Build version: ${GIT_TAG:-unknown}"		# GIT_TAG		populated on release only
+	[[ -n ${GIT_BRANCH} ]] && send_log 3 "Build branch: ${GIT_BRANCH:-unknown}"	# GIT_BRANCH	populated on pr only
+	[[ -n ${GIT_COMMIT} ]] && send_log 3 "Build commit: ${GIT_COMMIT:-unknown}"	# GIT_COMMIT	always populated
+}
+
 function load_configuration {
 	GRPCURL=grpcurl
 	DELAY=60
@@ -776,6 +784,8 @@ function start_workflow {
 
 function main {	
 	send_log 3 "starting psm..."
+	build_info
+
 	send_log 3 "loading psm configuration..."
 	load_configuration
 
