@@ -22,6 +22,8 @@ FROM ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/tjb-altf4/spacemesh-psm
 
+ARG GIT_COMMIT
+ARG GIT_TAG
 ENV GIT_COMMIT=$GIT_COMMIT
 ENV GIT_TAG=$GIT_TAG
 
