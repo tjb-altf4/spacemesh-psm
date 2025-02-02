@@ -18,10 +18,6 @@ env:
   GIT_COMMIT: ${{ github.sha }}
   # Capture Git tag (release)
   GIT_TAG: ${{ github.event.release.tag_name }}
-  # Capture Git branch (from PRs)
-  # GITHUB_BRANCH: ${{ github.base_ref }}
-  GITHUB_HEAD_REF: ${{ github.head_ref }}
-  GITHUB_BASE_REF: ${{ github.base_ref }}
 
 
 jobs:
@@ -72,7 +68,7 @@ jobs:
             type=ref,event=tag,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,format=short,prefix=edge-,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=dev,enable=${{ github.ref != 'refs/heads/main' }}
+            type=raw,value=${{ github.head_ref }},enable=${{ github.ref != 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref_type == 'tag' }}
 
       # Build and push Docker image with Buildx
@@ -90,6 +86,7 @@ jobs:
           build-args: |
             GIT_COMMIT=${{ env.GIT_COMMIT }}
             GIT_TAG=${{ env.GIT_TAG }}
+            GIT_BRANCH=${{ github.head_ref }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
