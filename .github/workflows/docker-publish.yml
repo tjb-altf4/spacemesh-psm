@@ -65,12 +65,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
-            type=ref,event=tag
-            type=sha,format=short,prefix=edge-
-            type=raw,value=edge
+            type=ref,event=tag,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=short,prefix=edge-,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ github.ref != 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref_type == 'tag' }}
 
-      # Build and push Docker image with Buildx (don't push on PR)
+      # Build and push Docker image with Buildx
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push

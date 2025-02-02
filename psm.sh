@@ -14,7 +14,7 @@ function load_configuration {
 	GRPCURL=grpcurl
 	DELAY=60
 
-	send_log 3 "Build version: ${GIT_TAG:-edge}"
+	send_log 3 "Build version: ${GIT_TAG:-unknown}"
 	send_log 3 "Build commit: ${GIT_COMMIT:-unknown}"
 
 	CURRENT_STATE=$(jq -c '.' /psm/config.json)
