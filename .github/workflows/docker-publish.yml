@@ -18,6 +18,10 @@ env:
   GIT_COMMIT: ${{ github.sha }}
   # Capture Git tag (release)
   GIT_TAG: ${{ github.event.release.tag_name }}
+  # Capture Git branch (from PRs)
+  # GITHUB_BRANCH: ${{ github.base_ref }}
+  GITHUB_HEAD_REF: ${{ github.head_ref }}
+  GITHUB_BASE_REF: ${{ github.base_ref }}
 
 
 jobs:
