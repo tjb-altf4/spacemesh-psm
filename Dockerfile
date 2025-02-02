@@ -22,6 +22,9 @@ FROM ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/tjb-altf4/spacemesh-psm
 
+ENV GIT_COMMIT=$GIT_COMMIT
+ENV GIT_TAG=$GIT_TAG
+
 # set default log level as INFO
 ENV PSM_LOG_LEVEL=3
 
