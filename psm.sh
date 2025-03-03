@@ -30,10 +30,15 @@ function load_configuration {
 	NODE=$(echo "$CURRENT_STATE" | jq -r '.node["name"]')
 	NODE_IP_ADDRESS=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["ip_address"]')
 	NODE_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["node_listener_port"]')
-	POST_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["post_listener_port"]')
-
 	NODE_SERVICE="${NODE_IP_ADDRESS}:${NODE_LISTENER_PORT}"
-	POST_SERVICE="${NODE_IP_ADDRESS}:${POST_LISTENER_PORT}"
+
+	POST_IP_ADDRESS==$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["ip_address"] // .node.endpoint["ip_address"]')
+	POST_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["post_listener_port"] // .node.endpoint["post_listener_port"]')
+	POST_SERVICE="${POST_IP_ADDRESS}:${POST_LISTENER_PORT}"
+
+	SMESHER_IP_ADDRESS=$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["ip_address"] // .node.endpoint["ip_address"]')
+	SMESHER_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["node_listener_port"] // .node.endpoint["node_listener_port"]')
+	SMESHER_SERVICE="${SMESHER_IP_ADDRESS}:${SMESHER_LISTENER_PORT}"
 
 	POST_SERVICE_PARALLEL=$(echo "$CURRENT_STATE" | jq -r '.node.post["service_parallel"] // 1')    # default to 1 service in p1
 }
