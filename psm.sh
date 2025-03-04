@@ -32,7 +32,7 @@ function load_configuration {
 	NODE_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.node.endpoint["node_listener_port"]')
 	NODE_SERVICE="${NODE_IP_ADDRESS}:${NODE_LISTENER_PORT}"
 
-	POST_IP_ADDRESS==$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["ip_address"] // .node.endpoint["ip_address"]')
+	POST_IP_ADDRESS=$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["ip_address"] // .node.endpoint["ip_address"]')
 	POST_LISTENER_PORT=$(echo "$CURRENT_STATE" | jq -r '.smesher.endpoint["post_listener_port"] // .node.endpoint["post_listener_port"]')
 	POST_SERVICE="${POST_IP_ADDRESS}:${POST_LISTENER_PORT}"
 
