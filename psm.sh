@@ -41,6 +41,10 @@ function load_configuration {
 	SMESHER_SERVICE="${SMESHER_IP_ADDRESS}:${SMESHER_LISTENER_PORT}"
 
 	POST_SERVICE_PARALLEL=$(echo "$CURRENT_STATE" | jq -r '.node.post["service_parallel"] // 1')    # default to 1 service in p1
+
+	send_log 4 "NODE_SERVICE: ${NODE_SERVICE}"
+	send_log 4 "POST_SERVICE: ${POST_SERVICE}"
+	send_log 4 "SMESHER_SERVICE: ${SMESHER_SERVICE}"
 }
 
 function validate_json {
