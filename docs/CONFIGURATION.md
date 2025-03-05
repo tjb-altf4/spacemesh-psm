@@ -22,8 +22,7 @@ There should be only one node specified, this is not an array.
         "endpoint": {
             "ip_address": "smh-node-01",
             "node_listener_port": "9092",
-            "post_listener_port": "9094",
-            "metrics": ""
+            "post_listener_port": "9094"
         },
         "poet": {
             "name": "team24 late phase",
@@ -48,6 +47,21 @@ There should be only one node specified, this is not an array.
     },
 ```
 
+### Smesher section
+This section is optional, and is only required if using smeshing-services.
+If using smeshing-service, `post_listener_port` should be removed from `node` configuration, and instead should form part of smeshing-service configuration as shown in the example.
+
+```json
+    "smesher": {
+        "name": "smh-smesher-01",
+        "endpoint": {
+            "ip_address": "smh-smesher-01",
+            "node_listener_port": "9092",
+            "post_listener_port": "9094"
+        }
+    },
+```
+
 ### Services section
 Configuration for post-services:
 - `name` is the container name for your post-service.
@@ -64,8 +78,7 @@ There can one or more post-services specified, this is an array.
         {
             "name": "smh-post-01",
             "endpoint": {
-                "ip_address": "smh-post-01",
-                "metrics": "http://smh-post-01:9100/status"
+                "ip_address": "smh-post-01"
             },
             "post": {
                 "id": "AAAAAAAAAAAAAAAAA=",
