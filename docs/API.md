@@ -1,26 +1,41 @@
 # spacemesh api reference
 quick reference document for past and present apis related to `spacemesh-psm` development.
 
-## grpc services
-ports are not standardised, however this is a best efforts configuration, following defaults where possible.
+## services
+ports are not standardised, however this is a best efforts configuration reference, following defaults where possible.
 ```json
 {
-    "node-service-api": { 
-        "grpc-public-listener": "0.0.0.0:9092",
-        "grpc-private-listener": "127.0.0.1:9093",
-        "grpc-post-listener": "0.0.0.0:9094",    // moves to smeshing-service if used
+    "node-service-api": {
+        "p2p": "/ip4/0.0.0.0/tcp/7513",
+        "grpc": { 
+            "grpc-public-listener": "0.0.0.0:9092",
+            "grpc-private-listener": "127.0.0.1:9093",
+            "grpc-post-listener": "0.0.0.0:9094",    // moves to smeshing-service if used
+        },
+        "http": {
+            "metrics": "0.0.0.0:9099/metrics"
+        }
     },
     "smeshing-service-api": {
-        "grpc-public-listener": "0.0.0.0:9092",
-        "grpc-private-listener": "0.0.0.0:9093",
-        "grpc-post-listener": "0.0.0.0:9094",
-        "grpc-json-listener": "0.0.0.0:9095"
+        "grpc": {
+            "grpc-public-listener": "0.0.0.0:9092",
+            "grpc-private-listener": "0.0.0.0:9093",
+            "grpc-post-listener": "0.0.0.0:9094",
+            "grpc-json-listener": "0.0.0.0:9095"
+        },
+        "http": {
+            "metrics": "0.0.0.0:9099/metrics"
+        }
     },
-    "post-service-api": { 
-
+    "post-service-api": {
+        "http": {
+            "operator": "0.0.0.0:9100/status"
+        }
     },
     "k2pow-service-api": { 
-                        
+        "http": {
+            "endpoint": "0.0.0.0:3000"
+        }                
     }
 }
 ```
