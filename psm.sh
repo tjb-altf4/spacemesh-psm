@@ -23,6 +23,50 @@ function load_configuration {
 	DELAY=60
 
 	CURRENT_STATE=$(jq -c '.' /psm/config.json)
+
+	# remove legacy state properties from config file, if exists, and repopulate state
+	CURRENT_STATE=$(echo "$CURRENT_STATE" | jq '
+		del(.network.state) |
+		.network.state = {
+			"layer": 0,
+			"epoch": 0,
+			"epoch_opened_layer": 0,
+			"epoch_closed_layer": 0,
+			"epoch_opened_countdown_layer": 0,
+			"epoch_closed_countdown_layer": 0
+		} |
+		del(.node.state) |
+		.node.state = {
+            "online": false,
+            "is_synced": false,
+            "phase": "",
+            "cycle_gap_opened_layer": 0,
+            "cycle_gap_opened_countdown_layer": 0,
+            "cycle_gap_closed_layer": 0,
+            "cycle_gap_closed_countdown_layer": 0,
+            "registration_opened_layer": 0,
+            "registration_opened_countdown_layer": 0
+		} |
+		.services |= map(
+			del(.state) |
+			.state = {
+				"online": false,
+				"phase": "",
+				"nonce": "",
+				"progress": 0,
+				"runtime": { 
+					"timestamp_start_pow": 0,
+					"timestamp_start_disk": 0,
+					"timestamp_finish": 0,
+					"read_rate_mib": 0,
+					"runtime_pow": 0,
+					"runtime_disk": 0,
+					"runtime_overall": 0
+				}
+			}
+		)'
+	)
+
 	validate_json "$CURRENT_STATE" || { send_log 0 "FATAL" "json validation failed. EXITING..."; exit 1; }
 
 	NODE_PROVING_READY=false	# helper variable to limit excessive node queries
@@ -95,10 +139,10 @@ function validate_json {
 	# 	&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
 	#	|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
-	CRITERIA=".endpoint.metrics is a url starting with http:// or https://"
-	jq -e 'all(.services[].endpoint.metrics; startswith("http://") or startswith("https://"))' <<< "$JSON" > /dev/null \
-		&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
-		|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
+	# CRITERIA=".endpoint.metrics is a url starting with http:// or https://"
+	# jq -e 'all(.services[].endpoint.metrics; startswith("http://") or startswith("https://"))' <<< "$JSON" > /dev/null \
+	# 	&& { send_log 4 "PASS: ${CRITERIA}"; true; } \
+	# 	|| { send_log 1 "FAIL: ${CRITERIA}"; return 1; }
 
 	CRITERIA=".state.online is a boolean"
 	jq -e 'all(.services[].state.online; type == "boolean")' <<< "$JSON" > /dev/null \
