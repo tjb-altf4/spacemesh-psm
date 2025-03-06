@@ -11,11 +11,11 @@ LOG_LEVELS='{
 }'
 
 function build_info {
-	[[ -z $GIT_TAG ]] && [[ -z $GIT_BRANCH ]] && GIT_TAG="edge"					# 				edge release
+	[[ -z $GIT_TAG ]] && [[ -z $GIT_BRANCH ]] && GIT_TAG="edge"                    #               edge release
 
-	[[ -n ${GIT_TAG} ]] && send_log 3 "Build version: ${GIT_TAG:-unknown}"		# GIT_TAG		populated on release only
-	[[ -n ${GIT_BRANCH} ]] && send_log 3 "Build branch: ${GIT_BRANCH:-unknown}"	# GIT_BRANCH	populated on pr only
-	[[ -n ${GIT_COMMIT} ]] && send_log 3 "Build commit: ${GIT_COMMIT:-unknown}"	# GIT_COMMIT	always populated
+	[[ -n ${GIT_TAG} ]] && send_log 3 "Build version: ${GIT_TAG:-unknown}"         # GIT_TAG       populated on release only
+	[[ -n ${GIT_BRANCH} ]] && send_log 3 "Build branch: ${GIT_BRANCH:-unknown}"    # GIT_BRANCH    populated on pr only
+	[[ -n ${GIT_COMMIT} ]] && send_log 3 "Build commit: ${GIT_COMMIT:-unknown}"    # GIT_COMMIT    always populated
 }
 
 function load_configuration {
@@ -538,6 +538,11 @@ function cycle_gap_is_open {
 	# this prevents services starting in an indeterminate proving state
 	if [[ "${EPOCH_PHASE}" == CYCLE_GAP* ]]
 	then
+		# if cycle gap open layer has passed, speed up loop iternation
+		# ideally this should be done on main loop with other DELAY setting
+		# may happen if splitting function later between cg layer opening, and poet proof fetched events
+		DELAY=60
+
 		# do not check if node has received poet proof, if already confirmed for this cycle gap
 		# this creates an allowance for node to go offline and not impact starting services
 		if [[ "${NODE_PROVING_READY}" == false ]]
