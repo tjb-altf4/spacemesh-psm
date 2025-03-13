@@ -236,9 +236,9 @@ function convert_layer_to_countdown {
     if (( DAYS == 0 && HOURS == 0 && MINUTES == 0 )); then
         echo ""
     elif (( DAYS == 0 && HOURS == 0 )); then
-        printf "%02dm\n" $MINUTES
+        printf "%dm\n" $MINUTES
     elif (( DAYS == 0 )); then
-        printf "%02dh %02dm\n" $HOURS $MINUTES
+        printf "%dh %02dm\n" $HOURS $MINUTES
     else
         printf "%dd %02dh %02dm\n" $DAYS $HOURS $MINUTES
     fi
