@@ -718,16 +718,25 @@ function node_metrics {
 	local POET_CYCLEGAP=$(echo "$CURRENT_STATE" | jq -r '.node.poet.cycle_gap')
 	local POET_PHASESHIFT=$(echo "$CURRENT_STATE" | jq -r '.node.poet.phase_shift')
 	local POET_GRACEPERIOD=$(echo "$CURRENT_STATE" | jq -r '.node.poet.grace_period')
+	local NODE_STATE="UNKNOWN"
+
+	if [ "$NODE_SYNC" = true ]; then
+		NODE_STATE="synced"
+	elif [ "$NODE_ONLINE" = true ]; then
+		NODE_STATE="no-sync"
+	else
+		NODE_STATE="offline"
+	fi
 
 	HEADER_PADDING='%-100s\n'
-	COLUMN_PADDING='%-22s %8s %8s %8s %6s %1s %-20s %9s %7s %7s %s\n'
+    COLUMN_PADDING='%-22s %8s %8s %8s %7s %-20s %9s %7s %7s %s\n'
 
 	send_log 3 ""
 	send_log 3 "$(printf "$HEADER_PADDING" 'NODE STATE ------------------------------------------------------------------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" 'phase'       'epoch'  'layer'  'online'  'sync' '' 'poet' 'cycle gap' 'shift' 'grace') "
+    send_log 3 "$(printf "$COLUMN_PADDING" 'phase'       'epoch'  'layer'  'state'          '' 'poet' 'cycle gap' 'shift' 'grace') "
 	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
-	send_log 3 "$(printf "$COLUMN_PADDING" "${NODE_PHASE}" "${NODE_EPOCH}" "${NODE_LAYER}" "${NODE_ONLINE}" "${NODE_SYNC}" "" "$POET_NAME" "$POET_CYCLEGAP" "$POET_PHASESHIFT" "$POET_GRACEPERIOD") "
-	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "
+    send_log 3 "$(printf "$COLUMN_PADDING" "${NODE_PHASE}" "${NODE_EPOCH}" "${NODE_LAYER}" "${NODE_STATE}" "" "$POET_NAME" "$POET_CYCLEGAP" "$POET_PHASESHIFT" "$POET_GRACEPERIOD") "
+	send_log 3 "$(printf "$HEADER_PADDING" '-----------------------------------------------------------------------------------------------------------') "    
 }
 
 function layer_metrics {
