@@ -224,18 +224,15 @@ function convert_layer_to_datetime {
     local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
     local TARGET_TIME=$((ORIGIN_TIME + TOTAL_SECONDS))
 
-    send_log 4 "LAYER_DURATION: ${LAYER_DURATION}"
-    send_log 4 "ORIGIN_TIME: ${ORIGIN_TIME}"
-    send_log 4 "TOTAL_SECONDS: ${TOTAL_SECONDS}"
-    send_log 4 "TARGET_TIME: ${TARGET_TIME}"
-
     date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"        # format output datetime
 }
 
 function convert_layer_to_countdown {
     local LAYERS=$1
-    local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
+    local PAYLOAD=$(echo "$CURRENT_STATE" | jq -r '.network.main')
 
+    local LAYER_DURATION=$(convert_to_seconds $(echo "$PAYLOAD" | jq -r '.layer_duration' ))
+    local ORIGIN_TIME=$(echo "$PAYLOAD" | jq -r '.origin_time' )
     local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
     local DAYS=$((TOTAL_SECONDS / 86400))
     local HOURS=$(( (TOTAL_SECONDS % 86400) / 3600 ))
