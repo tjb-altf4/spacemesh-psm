@@ -221,7 +221,8 @@ function convert_layer_to_datetime {
 
     local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
     local CURRENT_TIME=$(date +%s)                      # get the current time in unix timestamp
-    local TARGET_TIME=$((CURRENT_TIME + TOTAL_SECONDS))
+    local CURRENT_LAYER_TIME=$(( (CURRENT_TIME / LAYER_DURATION) * LAYER_DURATION ))   # get floor by layer
+    local TARGET_TIME=$((CURRENT_LAYER_TIME + TOTAL_SECONDS))
 
     date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"        # format output datetime
 }
