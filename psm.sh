@@ -217,11 +217,12 @@ function convert_to_layers {
 
 function convert_layer_to_datetime {
     local LAYERS=$1
-    local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
+	local PAYLOAD=$(echo "$CURRENT_STATE" | jq -r '.network.main')
 
+	local LAYER_DURATION=$(convert_to_seconds $(echo "$PAYLOAD" | jq -r '.layer_duration' ))
+	local ORIGIN_TIME=$(echo "$PAYLOAD" | jq -r '.origin_time' )
     local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
-    local CURRENT_TIME=$(date +%s)                      # get the current time in unix timestamp
-    local TARGET_TIME=$((CURRENT_TIME + TOTAL_SECONDS))
+	local TARGET_TIME=$((ORIGIN_TIME + TOTAL_SECONDS))
 
     date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"        # format output datetime
 }
