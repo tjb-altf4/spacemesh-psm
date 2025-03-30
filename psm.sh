@@ -206,7 +206,7 @@ function convert_to_seconds {
 }
 
 function convert_to_layers {
-	local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
+    local LAYER_DURATION=$(convert_to_seconds $(echo "$CURRENT_STATE" | jq -r '.network.main.layer_duration'))
 
     local INPUT=$1
     local SECONDS=$(convert_to_seconds $INPUT)
@@ -369,7 +369,7 @@ function get_node_state {
 }
 
 function set_network_state {
-	local PAYLOAD=$(echo "$CURRENT_STATE" | jq -r '.network.main')
+    local PAYLOAD=$(echo "$CURRENT_STATE" | jq -r '.network.main')
 
     local ORIGIN_TIME=$(echo "$PAYLOAD" | jq -r '.origin_time' )
     local LAYER_DURATION=$(convert_to_seconds $(echo "$PAYLOAD" | jq -r '.layer_duration' ))
@@ -378,16 +378,16 @@ function set_network_state {
     local CURRENT_TIME=$(date +%s)                                  # Get the current time in Unix timestamp format
     local TIME_DIFFERENCE=$((CURRENT_TIME - ORIGIN_TIME))           # Calculate the difference between the current time and the origin time
     local CURRENT_LAYER=$((TIME_DIFFERENCE / LAYER_DURATION))       # Calculate the current layer number
-	local CURRENT_EPOCH=$(( $CURRENT_LAYER / $LAYERS_PER_EPOCH ))
+    local CURRENT_EPOCH=$(( $CURRENT_LAYER / $LAYERS_PER_EPOCH ))
 
-	CURRENT_STATE=$(jq ".network.state.epoch = $CURRENT_EPOCH | \
-						.network.state.layer = $CURRENT_LAYER" <<< "$CURRENT_STATE")
-	
-	send_log 4 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
+    CURRENT_STATE=$(jq ".network.state.epoch = $CURRENT_EPOCH | \
+                        .network.state.layer = $CURRENT_LAYER" <<< "$CURRENT_STATE")
+
+    send_log 4 "epoch ${CURRENT_EPOCH} layer ${CURRENT_LAYER}"
 }
 
 function set_node_sync_state {
-	local IS_SYNCED=$(get_node_state)
+    local IS_SYNCED=$(get_node_state)
 
 	CURRENT_STATE=$(jq ".node.state.is_synced = $IS_SYNCED" <<< "$CURRENT_STATE")	
 
