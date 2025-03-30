@@ -224,6 +224,11 @@ function convert_layer_to_datetime {
     local TOTAL_SECONDS=$((LAYERS * LAYER_DURATION))    # convert layers to seconds
     local TARGET_TIME=$((ORIGIN_TIME + TOTAL_SECONDS))
 
+    send_log 4 "LAYER_DURATION: ${LAYER_DURATION}"
+    send_log 4 "ORIGIN_TIME: ${ORIGIN_TIME}"
+    send_log 4 "TOTAL_SECONDS: ${TOTAL_SECONDS}"
+    send_log 4 "TARGET_TIME: ${TARGET_TIME}"
+
     date -d "@$TARGET_TIME" "+%d-%b-%Y %H:%M %Z"        # format output datetime
 }
 
