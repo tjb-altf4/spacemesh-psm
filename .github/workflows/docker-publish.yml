@@ -65,10 +65,15 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
-            type=ref,event=tag,enable=${{ github.ref == 'refs/heads/main' }}
+            # semver tag
+            type=ref,event=tag,enable=${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+            # edge commit
             type=sha,format=short,prefix=edge-,enable=${{ github.ref == 'refs/heads/main' }}
+            # edge latest
             type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            # feature-branch-name
             type=raw,value=${{ github.head_ref }},enable=${{ github.ref != 'refs/heads/main' }}
+            # latest
             type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref_type == 'tag' }}
 
       # Build and push Docker image with Buildx
