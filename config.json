@@ -1,16 +1,9 @@
 {
     "network": {
         "main": {
+            "origin_time": 1689321600,
             "layer_duration": "5m",
             "layers_per_epoch": 4032
-        },
-        "state": {
-            "layer": 0,
-            "epoch": 0,
-            "epoch_opened_layer": 0,
-            "epoch_closed_layer": 0,
-            "epoch_opened_countdown_layer": 0,
-            "epoch_closed_countdown_layer": 0
         }
     },
     "node": {
@@ -18,25 +11,13 @@
         "endpoint": {
             "ip_address": "smh-node-01",
             "node_listener_port": "9092",
-            "post_listener_port": "9094",
-            "metrics": "http://smh-node-01:9099/metrics"
+            "post_listener_port": "9094"
         },
         "poet": {
             "name": "team24 late phase",
             "phase_shift": "288h",
             "cycle_gap": "24h",
             "grace_period": "2h"
-        },
-        "state": {
-            "online": false,
-            "is_synced": false,
-            "phase": "",
-            "cycle_gap_opened_layer": 0,
-            "cycle_gap_opened_countdown_layer": 0,
-            "cycle_gap_closed_layer": 0,
-            "cycle_gap_closed_countdown_layer": 0,
-            "registration_opened_layer": 0,
-            "registration_opened_countdown_layer": 0
         },
         "post": {
             "service_parallel": 1
@@ -52,21 +33,6 @@
             "post": {
                 "id": "AAAAAAAAAAAAAAAAAAAAAAAAAA=",
                 "numunits": 32
-            },
-            "state": {
-                "online": false,
-                "phase": "",
-                "nonce": "",
-                "progress": 0,
-                "runtime": { 
-                    "timestamp_start_pow": 0,
-                    "timestamp_start_disk": 0,
-                    "timestamp_finish": 0,
-                    "read_rate_mib": 0,
-                    "runtime_pow": 0,
-                    "runtime_disk": 0,
-                    "runtime_overall": 0
-                }
             }
         },
         {
@@ -78,21 +44,6 @@
             "post": {
                 "id": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
                 "numunits": 64
-            },
-            "state": {
-                "online": false,
-                "phase": "",
-                "nonce": "",
-                "progress": 0,
-                "runtime": { 
-                    "timestamp_start_pow": 0,
-                    "timestamp_start_disk": 0,
-                    "timestamp_finish": 0,
-                    "read_rate_mib": 0,
-                    "runtime_pow": 0,
-                    "runtime_disk": 0,
-                    "runtime_overall": 0
-                }
             }
         }
     ]
