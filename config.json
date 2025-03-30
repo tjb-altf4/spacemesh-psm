@@ -1,6 +1,7 @@
 {
     "network": {
         "main": {
+            "origin_time": 1689321600,
             "layer_duration": "5m",
             "layers_per_epoch": 4032
         }

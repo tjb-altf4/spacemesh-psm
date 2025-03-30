@@ -25,6 +25,7 @@ function load_configuration {
 	CURRENT_STATE=$(jq -c '.' /psm/config.json)
 
 	# remove legacy state properties from config file, if exists, and repopulate state
+    # TODO: remove .network.main.origin_time default when v2 api finalised, retrieve directly from node settings via grpc instead 
 	CURRENT_STATE=$(echo "$CURRENT_STATE" | jq '
 		del(.network.state) |
 		.network.state = {
@@ -35,6 +36,7 @@ function load_configuration {
 			"epoch_opened_countdown_layer": 0,
 			"epoch_closed_countdown_layer": 0
 		} |
+        .network.main.origin_time //= 1689321600 |
 		del(.node.state) |
 		.node.state = {
             "online": false,
@@ -367,10 +369,15 @@ function get_node_state {
 }
 
 function set_network_state {
-	local PAYLOAD=$($GRPCURL -plaintext $NODE_SERVICE spacemesh.v1.MeshService.CurrentLayer)
-	local LAYERS_PER_EPOCH=$(echo "$CURRENT_STATE" | jq -r '.network.main.layers_per_epoch')
+	local PAYLOAD=$(echo "$CURRENT_STATE" | jq -r '.network.main')
 
-	local CURRENT_LAYER=$(echo "$PAYLOAD" | jq -r '.layernum.number')
+    local ORIGIN_TIME=$(echo "$PAYLOAD" | jq -r '.origin_time' )
+    local LAYER_DURATION=$(convert_to_seconds $(echo "$PAYLOAD" | jq -r '.layer_duration' ))
+    local LAYERS_PER_EPOCH=$(echo "$PAYLOAD" | jq -r '.layers_per_epoch' )
+
+    local CURRENT_TIME=$(date +%s)                                  # Get the current time in Unix timestamp format
+    local TIME_DIFFERENCE=$((CURRENT_TIME - ORIGIN_TIME))           # Calculate the difference between the current time and the origin time
+    local CURRENT_LAYER=$((TIME_DIFFERENCE / LAYER_DURATION))       # Calculate the current layer number
 	local CURRENT_EPOCH=$(( $CURRENT_LAYER / $LAYERS_PER_EPOCH ))
 
 	CURRENT_STATE=$(jq ".network.state.epoch = $CURRENT_EPOCH | \
